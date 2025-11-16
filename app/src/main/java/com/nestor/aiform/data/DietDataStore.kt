@@ -56,4 +56,13 @@ class DietRepository(private val context: Context) {
             prefs[DINNER_KEY] = done
         }
     }
+
+    suspend fun resetDay() {
+        context.dietDataStore.edit { prefs ->
+            prefs[BREAKFAST_KEY] = false
+            prefs[LUNCH_KEY] = false
+            prefs[SNACK_KEY] = false
+            prefs[DINNER_KEY] = false
+        }
+    }
 }

@@ -42,6 +42,9 @@ class MainActivity : ComponentActivity() {
                         composable(Screen.History.route) {
                             HistoryScreen(navController)
                         }
+                        composable(Screen.Settings.route) {
+                            SettingsScreen(navController)
+                        }
                     }
                 }
             }

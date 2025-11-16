@@ -7,6 +7,8 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -14,31 +16,24 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.compose.material3.ExperimentalMaterial3Api
+import com.nestor.aiform.ExerciseDefinition
+import com.nestor.aiform.TrainingPlan
+import com.nestor.aiform.data.SettingsRepository
+import com.nestor.aiform.data.SettingsState
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrainingScreen(navController: NavController) {
-    val exercises = listOf(
-        "Press banca",
-        "Remo con barra",
-        "Peso muerto rumano",
-        "Sentadilla",
-        "Press militar",
-        "Curl bíceps",
-        "Extensión tríceps",
-        "Abdominales"
-    )
-
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val settingsRepo = remember { SettingsRepository(context) }
+    val settings by settingsRepo.settings.collectAsState(initial = SettingsState())
 
-    var selectedExercise by remember { mutableStateOf<String?>(null) }
-    var timeLeft by remember { mutableStateOf(0) }      // segundos restantes
+
+    var selectedExercise by remember { mutableStateOf<ExerciseDefinition?>(null) }
+    var timeLeft by remember { mutableStateOf(0) }
     var isRunning by remember { mutableStateOf(false) }
 
-    // Cada vez que el timer está en marcha, contamos hacia atrás
     LaunchedEffect(isRunning, selectedExercise) {
         if (isRunning && selectedExercise != null) {
             while (isRunning && timeLeft > 0) {
@@ -46,8 +41,12 @@ fun TrainingScreen(navController: NavController) {
                 timeLeft -= 1
             }
             if (timeLeft <= 0 && isRunning && selectedExercise != null) {
-                // Vibrar al terminar el descanso
-                vibrateOnce(context)
+
+                // AQUÍ se aplica lo de ajustes
+                if (settings.vibrationEnabled) {
+                    vibrateOnce(context)
+                }
+
                 isRunning = false
             }
         }
@@ -73,37 +72,50 @@ fun TrainingScreen(navController: NavController) {
                     style = MaterialTheme.typography.titleMedium
                 )
 
-                exercises.forEach { exercise ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                selectedExercise = exercise
-                                timeLeft = 60   // por ejemplo 60s de descanso inicial
-                                isRunning = true
+                // LISTA SCROLLEABLE
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(TrainingPlan) { exercise ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedExercise = exercise
+                                    timeLeft = exercise.defaultRestSeconds
+                                    isRunning = true
+                                }
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(exercise.name)
+                                Text(
+                                    "Descanso: ${exercise.defaultRestSeconds}s",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
                             }
-                    ) {
-                        Box(modifier = Modifier.padding(16.dp)) {
-                            Text(exercise)
                         }
                     }
                 }
+
+                Button(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Volver")
+                }
             } else {
+                Text("Ejercicio actual:", style = MaterialTheme.typography.bodyLarge)
                 Text(
-                    "Ejercicio actual:",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Text(
-                    selectedExercise ?: "",
+                    selectedExercise!!.name,
                     style = MaterialTheme.typography.titleLarge
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    "Descanso:",
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                Text("Descanso:", style = MaterialTheme.typography.bodyLarge)
                 Text(
                     "${timeLeft}s",
                     style = MaterialTheme.typography.headlineMedium
@@ -118,9 +130,10 @@ fun TrainingScreen(navController: NavController) {
                     Button(
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            // Reinicia el descanso para la misma serie
-                            timeLeft = 60
-                            isRunning = true
+                            selectedExercise?.let {
+                                timeLeft = selectedExercise?.defaultRestSeconds ?: 0
+                                isRunning = true
+                            }
                         }
                     ) {
                         Text("Reiniciar descanso")
@@ -129,9 +142,10 @@ fun TrainingScreen(navController: NavController) {
                     Button(
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            // Siguiente serie: mismo ejercicio, nuevo descanso
-                            timeLeft = 60
-                            isRunning = true
+                            selectedExercise?.let {
+                                timeLeft = selectedExercise?.defaultRestSeconds ?: 0
+                                isRunning = true
+                            }
                         }
                     ) {
                         Text("Siguiente serie")
@@ -143,7 +157,6 @@ fun TrainingScreen(navController: NavController) {
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
-                        // Terminar ejercicio y volver a la lista
                         isRunning = false
                         selectedExercise = null
                         timeLeft = 0
@@ -151,21 +164,20 @@ fun TrainingScreen(navController: NavController) {
                 ) {
                     Text("Terminar ejercicio")
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Volver")
+                Button(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Volver")
+                }
             }
         }
     }
 }
 
-// Helper para vibrar
 fun vibrateOnce(context: Context, millis: Long = 300L) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val vibratorManager =

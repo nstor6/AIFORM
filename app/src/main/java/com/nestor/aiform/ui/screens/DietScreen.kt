@@ -8,6 +8,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.compose.material3.ExperimentalMaterial3Api
+import com.nestor.aiform.DailyMeals
 import com.nestor.aiform.data.DietChecklistState
 import com.nestor.aiform.data.DietRepository
 import kotlinx.coroutines.launch
@@ -35,56 +36,35 @@ fun DietScreen(navController: NavController) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Desayuno")
-                Checkbox(
-                    checked = dietState.breakfastDone,
-                    onCheckedChange = { checked ->
-                        scope.launch { repo.setBreakfast(checked) }
-                    }
-                )
-            }
+            DailyMeals.forEach { meal ->
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(meal.label)
 
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Comida")
-                Checkbox(
-                    checked = dietState.lunchDone,
-                    onCheckedChange = { checked ->
-                        scope.launch { repo.setLunch(checked) }
+                    val checked = when (meal.id) {
+                        "breakfast" -> dietState.breakfastDone
+                        "lunch" -> dietState.lunchDone
+                        "snack" -> dietState.snackDone
+                        "dinner" -> dietState.dinnerDone
+                        else -> false
                     }
-                )
-            }
 
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Merienda")
-                Checkbox(
-                    checked = dietState.snackDone,
-                    onCheckedChange = { checked ->
-                        scope.launch { repo.setSnack(checked) }
-                    }
-                )
-            }
-
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Cena")
-                Checkbox(
-                    checked = dietState.dinnerDone,
-                    onCheckedChange = { checked ->
-                        scope.launch { repo.setDinner(checked) }
-                    }
-                )
+                    Checkbox(
+                        checked = checked,
+                        onCheckedChange = { value ->
+                            scope.launch {
+                                when (meal.id) {
+                                    "breakfast" -> repo.setBreakfast(value)
+                                    "lunch" -> repo.setLunch(value)
+                                    "snack" -> repo.setSnack(value)
+                                    "dinner" -> repo.setDinner(value)
+                                }
+                            }
+                        }
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
