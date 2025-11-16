@@ -56,6 +56,13 @@ fun DashboardScreen(navController: NavController) {
             ) {
                 Text("Historial de peso")
             }
+
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { navController.navigate(Screen.Settings.route) }
+            ) {
+                Text("Ajustes")
+            }
         }
     }
 }
