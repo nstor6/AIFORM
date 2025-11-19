@@ -18,7 +18,6 @@ import androidx.navigation.NavController
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.nestor.aiform.ExerciseDefinition
 import com.nestor.aiform.TrainingPlan
-import com.nestor.aiform.defaultRestSeconds
 import com.nestor.aiform.data.SettingsRepository
 import com.nestor.aiform.data.SettingsState
 import kotlinx.coroutines.delay
@@ -33,6 +32,7 @@ fun TrainingScreen(navController: NavController) {
     var selectedExercise by remember { mutableStateOf<ExerciseDefinition?>(null) }
     var timeLeft by remember { mutableStateOf(0) }
     var isRunning by remember { mutableStateOf(false) }
+    var currentSet by remember { mutableStateOf(1) }
 
     LaunchedEffect(isRunning, selectedExercise) {
         if (isRunning && selectedExercise != null) {
@@ -76,19 +76,25 @@ fun TrainingScreen(navController: NavController) {
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(TrainingPlan) { exercise ->
+                        val scheme = exercise.targetSets.firstOrNull()
+                        val rest = scheme?.restSeconds ?: 60
+                        val sets = scheme?.sets ?: 1
+                        val reps = scheme?.reps
+
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
                                     selectedExercise = exercise
-                                    timeLeft = exercise.defaultRestSeconds()
+                                    currentSet = 1
+                                    timeLeft = rest
                                     isRunning = true
                                 }
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(exercise.name)
                                 Text(
-                                    "Descanso: ${exercise.defaultRestSeconds()}s",
+                                    "Series: $sets · Reps: ${reps ?: "-"} · Descanso: ${rest}s",
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
@@ -103,10 +109,26 @@ fun TrainingScreen(navController: NavController) {
                     Text("Volver")
                 }
             } else {
+                val scheme = selectedExercise!!.targetSets.firstOrNull()
+                val totalSets = scheme?.sets ?: 1
+                val reps = scheme?.reps
+                val rest = scheme?.restSeconds ?: 60
+
                 Text("Ejercicio actual:", style = MaterialTheme.typography.bodyLarge)
                 Text(
                     selectedExercise!!.name,
                     style = MaterialTheme.typography.titleLarge
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    "Serie $currentSet de $totalSets",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    "Objetivo: ${reps ?: "-"} reps" + (if (scheme?.rir != null) " · RIR ${scheme.rir}" else ""),
+                    style = MaterialTheme.typography.bodyMedium
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -126,10 +148,9 @@ fun TrainingScreen(navController: NavController) {
                     Button(
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            selectedExercise?.let { ex ->
-                                timeLeft = ex.defaultRestSeconds()
-                                isRunning = true
-                            }
+                            // Reiniciar descanso de la serie actual
+                            timeLeft = rest
+                            isRunning = true
                         }
                     ) {
                         Text("Reiniciar descanso")
@@ -138,9 +159,15 @@ fun TrainingScreen(navController: NavController) {
                     Button(
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            selectedExercise?.let { ex ->
-                                timeLeft = ex.defaultRestSeconds()
+                            // Pasar a la siguiente serie (si queda)
+                            if (currentSet < totalSets) {
+                                currentSet += 1
+                                timeLeft = rest
                                 isRunning = true
+                            } else {
+                                // Ya no quedan series; paramos
+                                isRunning = false
+                                timeLeft = 0
                             }
                         }
                     ) {
@@ -153,9 +180,11 @@ fun TrainingScreen(navController: NavController) {
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
+                        // Terminar ejercicio y volver a la lista
                         isRunning = false
                         selectedExercise = null
                         timeLeft = 0
+                        currentSet = 1
                     }
                 ) {
                     Text("Terminar ejercicio")
