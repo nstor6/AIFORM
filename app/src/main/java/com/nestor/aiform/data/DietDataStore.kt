@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 // DataStore para la dieta
-val Context.dietDataStore by preferencesDataStore(name = "diet_prefs")
+private val Context.dietDataStore by preferencesDataStore(name = "diet_prefs")
 
 private val BREAKFAST_KEY = booleanPreferencesKey("breakfast_done")
 private val LUNCH_KEY = booleanPreferencesKey("lunch_done")

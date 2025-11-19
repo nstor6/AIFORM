@@ -36,6 +36,7 @@ fun DietScreen(navController: NavController) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Generamos las filas a partir del plan (DailyMeals)
             DailyMeals.forEach { meal ->
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -45,10 +46,10 @@ fun DietScreen(navController: NavController) {
 
                     val checked = when (meal.id) {
                         "breakfast" -> dietState.breakfastDone
-                        "lunch" -> dietState.lunchDone
-                        "snack" -> dietState.snackDone
-                        "dinner" -> dietState.dinnerDone
-                        else -> false
+                        "lunch"     -> dietState.lunchDone
+                        "snack"     -> dietState.snackDone
+                        "dinner"    -> dietState.dinnerDone
+                        else        -> false
                     }
 
                     Checkbox(
@@ -57,9 +58,9 @@ fun DietScreen(navController: NavController) {
                             scope.launch {
                                 when (meal.id) {
                                     "breakfast" -> repo.setBreakfast(value)
-                                    "lunch" -> repo.setLunch(value)
-                                    "snack" -> repo.setSnack(value)
-                                    "dinner" -> repo.setDinner(value)
+                                    "lunch"     -> repo.setLunch(value)
+                                    "snack"     -> repo.setSnack(value)
+                                    "dinner"    -> repo.setDinner(value)
                                 }
                             }
                         }

@@ -18,6 +18,7 @@ import androidx.navigation.NavController
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.nestor.aiform.ExerciseDefinition
 import com.nestor.aiform.TrainingPlan
+import com.nestor.aiform.defaultRestSeconds
 import com.nestor.aiform.data.SettingsRepository
 import com.nestor.aiform.data.SettingsState
 import kotlinx.coroutines.delay
@@ -28,7 +29,6 @@ fun TrainingScreen(navController: NavController) {
     val context = LocalContext.current
     val settingsRepo = remember { SettingsRepository(context) }
     val settings by settingsRepo.settings.collectAsState(initial = SettingsState())
-
 
     var selectedExercise by remember { mutableStateOf<ExerciseDefinition?>(null) }
     var timeLeft by remember { mutableStateOf(0) }
@@ -41,12 +41,9 @@ fun TrainingScreen(navController: NavController) {
                 timeLeft -= 1
             }
             if (timeLeft <= 0 && isRunning && selectedExercise != null) {
-
-                // AQUÍ se aplica lo de ajustes
                 if (settings.vibrationEnabled) {
                     vibrateOnce(context)
                 }
-
                 isRunning = false
             }
         }
@@ -72,7 +69,6 @@ fun TrainingScreen(navController: NavController) {
                     style = MaterialTheme.typography.titleMedium
                 )
 
-                // LISTA SCROLLEABLE
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -85,14 +81,14 @@ fun TrainingScreen(navController: NavController) {
                                 .fillMaxWidth()
                                 .clickable {
                                     selectedExercise = exercise
-                                    timeLeft = exercise.defaultRestSeconds
+                                    timeLeft = exercise.defaultRestSeconds()
                                     isRunning = true
                                 }
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(exercise.name)
                                 Text(
-                                    "Descanso: ${exercise.defaultRestSeconds}s",
+                                    "Descanso: ${exercise.defaultRestSeconds()}s",
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
@@ -130,8 +126,8 @@ fun TrainingScreen(navController: NavController) {
                     Button(
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            selectedExercise?.let {
-                                timeLeft = selectedExercise?.defaultRestSeconds ?: 0
+                            selectedExercise?.let { ex ->
+                                timeLeft = ex.defaultRestSeconds()
                                 isRunning = true
                             }
                         }
@@ -142,8 +138,8 @@ fun TrainingScreen(navController: NavController) {
                     Button(
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            selectedExercise?.let {
-                                timeLeft = selectedExercise?.defaultRestSeconds ?: 0
+                            selectedExercise?.let { ex ->
+                                timeLeft = ex.defaultRestSeconds()
                                 isRunning = true
                             }
                         }
