@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-02-10T08:00:00Z",
+  "dayPlan": {
+    "date": "2026-02-10",
+    "timeZoneId": "Europe/Madrid",
+    "workout": {
+      "title": "Upper A",
+      "exercises": [
+        {
+          "id": "bench_press",
+          "name": "Press banca",
+          "restBetweenSetsSec": 90,
+          "restAfterExerciseSec": 120,
+          "sets": [
+            { "targetReps": 10, "targetWeightKg": 60.0 },
+            { "targetReps": 10, "targetWeightKg": 60.0 },
+            { "targetReps": 8, "targetWeightKg": 62.5 }
+          ]
+        }
+      ]
+    }
+  }
+}
